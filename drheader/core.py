@@ -24,7 +24,7 @@ class Drheader:
         reporter (Reporter): Reporter instance that generates and holds the final report.
     """
 
-    def __init__(self, headers=None, url=None, method='get', params=None, request_headers=None, verify=True):
+    def __init__(self, headers=None, url=None, method='get', params=None, request_headers=None, verify=True, timeout=10):
         """Initialises a Drheader instance.
 
         Either headers or url must be defined. If both are defined, the value passed in headers will take priority. If
@@ -37,6 +37,7 @@ class Drheader:
             params (dict): (optional) Any request parameters to send when retrieving the headers.
             request_headers (dict): (optional) Any request headers to send when retrieving the headers.
             verify (bool): (optional) A flag to verify the server's TLS certificate. Default is True.
+            timeout (int): (optional) Requests timeout in seconds. Default is 10s.
 
         Raises:
             ValueError: If neither headers nor url is provided, or if url is not a valid URL.
@@ -45,7 +46,7 @@ class Drheader:
             if not url:
                 raise ValueError("Nothing provided for analysis. Either 'headers' or 'url' must be defined")
             else:
-                headers = _get_headers_from_url(url, method, params, request_headers, verify)
+                headers = _get_headers_from_url(url, method, params, request_headers, verify, timeout)
         elif isinstance(headers, str):
             headers = json.loads(headers)
 
@@ -170,12 +171,12 @@ class Drheader:
                     self.reporter.add_item(item)
 
 
-def _get_headers_from_url(url, method, params, headers, verify):
+def _get_headers_from_url(url, method, params, headers, verify, timeout):
     if not validators.url(url):
         raise ValueError(f"Cannot retrieve headers from '{url}'. The URL is malformed")
 
     request_object = getattr(requests, method.lower())
-    response = request_object(url, data=params, headers=headers, verify=verify)
+    response = request_object(url, data=params, headers=headers, verify=verify, timeout=timeout)
     response_headers = response.headers
 
     if len(response.raw.headers.getlist('Set-Cookie')) > 0:
